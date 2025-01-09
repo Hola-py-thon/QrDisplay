@@ -1,16 +1,15 @@
-// app.js
-
 const express = require('express');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 10000;
 
-// Middleware to parse JSON requests
+app.use(cors());  // Enable CORS
 app.use(bodyParser.json());
 
 // In-memory database
 let users = {
-  "owner": { "password": "ownerpass", "role": "owner" }
+  "owner": { "password": "ownerpass", "role": "owner", "balance": 1000 }  // Example balance for owner
 };
 let sellers = {};
 
@@ -36,8 +35,17 @@ function addSeller(name, balance) {
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   const role = authenticate(username, password);
+
   if (role) {
-    return res.json({ success: true, role });
+    return res.json({
+      success: true,
+      role,
+      user: { 
+        username,
+        balance: users[username].balance,  // Include the user's balance
+        role 
+      }
+    });
   }
   return res.status(401).json({ success: false, message: "Invalid credentials" });
 });
