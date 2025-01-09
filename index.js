@@ -1,15 +1,16 @@
+// app.js
+
 const express = require('express');
 const bodyParser = require('body-parser');
-const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 10000;
 
-app.use(cors());  // Enable CORS
+// Middleware to parse JSON requests
 app.use(bodyParser.json());
 
 // In-memory database
 let users = {
-  "owner": { "password": "ownerpass", "role": "owner", "balance": 1000 }  // Example balance for owner
+  "owner": { "password": "ownerpass", "role": "owner" }
 };
 let sellers = {};
 
@@ -23,42 +24,43 @@ function authenticate(username, password) {
 }
 
 // Helper: Add new seller
-function addSeller(name, balance) {
+function addSeller(name, balance, password) {
   if (sellers[name]) {
     return { success: false, message: "Seller already exists" };
   }
-  sellers[name] = { balance, keys: [] };
+  sellers[name] = { balance, password, keys: [] };
   return { success: true, message: "Seller added successfully" };
 }
 
-// Route: Login
+// Route: Login (Owner only)
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   const role = authenticate(username, password);
-
   if (role) {
-    return res.json({
-      success: true,
-      role,
-      user: { 
-        username,
-        balance: users[username].balance,  // Include the user's balance
-        role 
-      }
-    });
+    return res.json({ success: true, role, user: { username, balance: users[username]?.balance || 0, role } });
+  }
+  return res.status(401).json({ success: false, message: "Invalid credentials" });
+});
+
+// Route: Seller Login
+app.post('/api/seller_login', (req, res) => {
+  const { seller_name, password } = req.body;
+  const seller = sellers[seller_name];
+  if (seller && seller.password === password) {
+    return res.json({ success: true, role: 'seller', seller: { seller_name, balance: seller.balance } });
   }
   return res.status(401).json({ success: false, message: "Invalid credentials" });
 });
 
 // Route: Add seller (Owner only)
 app.post('/api/add_seller', (req, res) => {
-  const { username, password, seller_name, initial_balance } = req.body;
+  const { username, password, seller_name, initial_balance, seller_password } = req.body;
 
   if (authenticate(username, password) !== "owner") {
     return res.status(403).json({ success: false, message: "Unauthorized" });
   }
 
-  const result = addSeller(seller_name, initial_balance);
+  const result = addSeller(seller_name, initial_balance, seller_password);
   return res.json(result);
 });
 
