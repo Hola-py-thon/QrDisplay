@@ -26,6 +26,11 @@ def add_seller(name, balance):
     sellers[name] = {"balance": balance, "keys": []}
     return True, "Seller added successfully"
 
+# Route: Home (Root Route)
+@app.route('/')
+def home():
+    return "Flask API is running!"
+
 # Route: Login
 @app.route("/api/login", methods=["POST"])
 def login():
@@ -112,4 +117,3 @@ def seller_details():
 # Run Flask app
 if __name__ == "__main__":
     app.run(debug=True)
-  
