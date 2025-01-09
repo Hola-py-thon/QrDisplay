@@ -1,7 +1,5 @@
-import os
 from flask import Flask
-
-app = Flask(__name__)
+from flask import app  # replace `your_flask_file` with the actual file name without `.py`
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=10000)
+    app.run()
